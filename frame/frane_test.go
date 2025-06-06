@@ -9,7 +9,7 @@ import (
 func TestEncode(t *testing.T) {
 	codec := NewMyFrameCodec()
 	buf := make([]byte, 0, 128)
-	rw := bytes.NewBuffer(buf)
+	rw := bytes.NewBuffer(buf) // *bytes.Buffer 实现了Write方法，也就是实现了 io.Writer类，可以作为Encode方法的第一个参数
 
 	err := codec.Encode(rw, []byte("hello world"))
 	if err != nil {
@@ -33,6 +33,7 @@ func TestEncode(t *testing.T) {
 
 func TestDecode(t *testing.T) {
 	codec := NewMyFrameCodec()
+	// 前四位会被解析成 15(0x0000000f)存到totalLen中
 	data := []byte{0x0, 0x0, 0x0, 0xf, 'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'}
 
 	payload, err := codec.Decode(bytes.NewReader(data))

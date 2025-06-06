@@ -27,6 +27,15 @@ func (*myFrameCodec) Encode(w io.Writer, framePayload FramePayload) error {
 	var f = framePayload
 	var totalLen int32 = int32(len(framePayload)) + 4
 	err := binary.Write(w, binary.BigEndian, &totalLen) // 将一个 int32 类型的 totalLen 按照大端字节序（高位字节在前，低位字节在后）写入到 io.Writer 中
+	/*
+		底层逻辑如下：
+		// 1. 把 int32 按照大端序编码成字节
+		b := make([]byte, 4)
+		binary.BigEndian.PutUint32(b, uint32(totalLen))
+
+		// 2. 把字节写入 w（io.Writer）
+		_, err := w.Write(b)
+	*/
 	if err != nil {
 		return err
 	}

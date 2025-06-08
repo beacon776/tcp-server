@@ -7,27 +7,30 @@ import (
 )
 
 const (
-	CommandConn   = iota + 0x01 // 0x01
-	CommandSubmit               // 0x02
+	CommandConn   = iota + 0x01 // 0x01  连接请求包
+	CommandSubmit               // 0x02 消息请求包
 )
 
 const (
-	CommandConnAck   = iota + 0x80 // 0x81
-	CommandSubmitAck               //0x82
+	CommandConnAck   = iota + 0x80 // 0x81 连接响应包
+	CommandSubmitAck               //0x82 消息响应包
 )
 
 type Packet interface {
 	Decode([]byte) error     // []byte -> struct
 	Encode() ([]byte, error) // struct -> []byte
+	/* 虽然 Encode 无传入参数，Decode 除了error外无返回参数，但是请注意：方法的执行者（receiver）会作为第一个参数传入函数参数列表，
+	相当于有了对应的传参和修改参数。
+	*/
 }
 
 type Submit struct {
-	ID      string
-	Payload []byte
+	ID      string // 消息流水号（请求和响应的ID保持一致）
+	Payload []byte // 消息的有效载荷
 }
 type SubmitAck struct { // SubmitAck 是 Submit Acknowledgement 的缩写，表示提交应答
-	ID     string
-	Result uint8
+	ID     string // 消息流水号（请求和响应的ID保持一致）
+	Result uint8  // 响应状态（0：正常，1：错误）
 }
 
 func NewSubmitWithoutParam() *Submit {
@@ -73,6 +76,10 @@ func (p *Submit) Encode() ([]byte, error) {
 		return nil, errors.New("ID must be exactly 8 bytes")
 	}
 	return bytes.Join([][]byte{[]byte(p.ID[:8]), p.Payload}, nil), nil
+	/*
+		func Join(s [][]byte, sep []byte) []byte
+		s数组为需要连接的多个切片， sep为分隔符
+	*/
 }
 
 func (p *SubmitAck) Decode(packetBody []byte) error {
@@ -142,14 +149,14 @@ func Decode(packet []byte) (Packet, error) {
 		return nil, nil
 	case CommandSubmit:
 		s := Submit{}
-		err := s.Decode(packetBody)
+		err := s.Decode(packetBody) // 注意，Decode时修改了s的内容
 		if err != nil {
 			return nil, err
 		}
 		return &s, nil
 	case CommandSubmitAck:
 		s := SubmitAck{}
-		err := s.Decode(packetBody)
+		err := s.Decode(packetBody) // 注意，Decode时修改了s的内容
 		if err != nil {
 			return nil, err
 		}

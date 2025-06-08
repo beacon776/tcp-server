@@ -8,7 +8,7 @@ import (
 
 type FramePayload []byte
 
-type StreamFrameCodec interface {
+type StreamFrameCodec interface { // Codec = Coder/Decoder 解码器 + 编码器
 	Encode(io.Writer, FramePayload) error   // data -> Frame -> io.Writer
 	Decode(io.Reader) (FramePayload, error) // io.Reader -> FramePayload
 }
@@ -39,7 +39,7 @@ func (*myFrameCodec) Encode(w io.Writer, framePayload FramePayload) error {
 	if err != nil {
 		return err
 	}
-	n, err := w.Write([]byte(f))
+	n, err := w.Write([]byte(f)) // 把 framePayload 写入 io.Writer
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (*myFrameCodec) Decode(r io.Reader) (FramePayload, error) {
 		return nil, err
 	}
 	buf := make([]byte, totalLen-4)
-	n, err := io.ReadFull(r, buf)
+	n, err := io.ReadFull(r, buf) // 读取剩余所有内容
 	if err != nil {
 		return nil, err
 	}
